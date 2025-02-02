@@ -1,10 +1,12 @@
+import { BaseContextProvider } from "../index.js";
+
 import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-  IContextProvider,
   LoadSubmenuItemsArgs,
 } from "../../";
+
 
 interface ContextExtractorResult {
   holeTypes: string[];
@@ -16,8 +18,17 @@ interface ContextExtractor {
   extractContext(code: string, language: string): Promise<ContextExtractorResult>;
 }
 
-export class ExtractorContextProvider implements IContextProvider {
-  constructor(private extractor: ContextExtractor) { }
+export class ExtractorContextProvider extends BaseContextProvider {
+  constructor(options: { [key: string]: any }) {
+    super(options);
+  }
+
+  static description: ContextProviderDescription = {
+    title: "extractor",
+    displayTitle: "Extracted Context",
+    description: "Provides context extracted from code using language server",
+    type: "normal",
+  };
 
   get description(): ContextProviderDescription {
     return {
@@ -32,51 +43,6 @@ export class ExtractorContextProvider implements IContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    // const currentFile = await extras.ide.getCurrentFile();
-    // if (!currentFile?.contents) {
-    //   return [];
-    // }
-
-    // try {
-    //   const result = await this.extractor.extractContext(
-    //     currentFile.contents,
-    //     currentFile.path.split('.').pop() || '' // 从文件路径获取语言
-    //   );
-
-    //   const contextItems: ContextItem[] = [];
-
-    //   // Add hole types
-    //   if (result.holeTypes.length > 0) {
-    //     contextItems.push({
-    //       name: "Hole Types",
-    //       description: "Types found in the code holes",
-    //       content: result.holeTypes.join('\n')
-    //     });
-    //   }
-
-    //   // Add relevant types
-    //   if (result.relevantTypes.length > 0) {
-    //     contextItems.push({
-    //       name: "Relevant Types",
-    //       description: "Related type definitions",
-    //       content: result.relevantTypes.join('\n')
-    //     });
-    //   }
-
-    //   // Add relevant headers
-    //   if (result.relevantHeaders.length > 0) {
-    //     contextItems.push({
-    //       name: "Relevant Headers",
-    //       description: "Related header information",
-    //       content: result.relevantHeaders.join('\n')
-    //     });
-    //   }
-
-    //   return contextItems;
-    // } catch (error) {
-    //   console.error("Error extracting context:", error);
-    //   return [];
-    // }
     return [
       {
         name: "Test Type 1",
@@ -96,7 +62,9 @@ export class ExtractorContextProvider implements IContextProvider {
     ];
   }
 
-  async loadSubmenuItems(args: LoadSubmenuItemsArgs) {
-    return []; 
+  async loadSubmenuItems(_args: LoadSubmenuItemsArgs) {
+    return [];
   }
 }
+
+export default ExtractorContextProvider;

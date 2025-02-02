@@ -10,6 +10,7 @@ import DebugLocalsProvider from "./DebugLocalsProvider";
 import DiffContextProvider from "./DiffContextProvider";
 import DiscordContextProvider from "./DiscordContextProvider";
 import DocsContextProvider from "./DocsContextProvider";
+import ExtractorContextProvider from "./ExtractorContextProvider";
 import FileTreeContextProvider from "./FileTreeContextProvider";
 import FolderContextProvider from "./FolderContextProvider";
 import GitCommitContextProvider from "./GitCommitContextProvider";
@@ -66,6 +67,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   MCPContextProvider,
   GitCommitContextProvider,
   ClipboardContextProvider,
+  ExtractorContextProvider,
 ];
 
 export function contextProviderClassFromName(

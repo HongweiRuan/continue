@@ -3,6 +3,14 @@
 # Start developing with:
 # - Run Task -> Install Dependencies
 # - Debug -> Extension
+
+# 使用 nvm 设定 Node.js 版本
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+nvm use 22
+
+
 set -e
 
 echo "Installing root-level dependencies..."
