@@ -1,27 +1,19 @@
+import fs from "fs";
+
+import { extractContext } from "@jpoly1219/context-extractor";
+import { Language } from "@jpoly1219/context-extractor/dist/src/types";
+
+
 import { BaseContextProvider } from "../index.js";
 
 import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-  LoadSubmenuItemsArgs,
 } from "../../";
 
 
-interface ContextExtractorResult {
-  holeTypes: string[];
-  relevantTypes: string[];
-  relevantHeaders: string[];
-}
-
-interface ContextExtractor {
-  extractContext(code: string, language: string): Promise<ContextExtractorResult>;
-}
-
 export class ExtractorContextProvider extends BaseContextProvider {
-  constructor(options: { [key: string]: any }) {
-    super(options);
-  }
 
   static description: ContextProviderDescription = {
     title: "extractor",
@@ -43,28 +35,86 @@ export class ExtractorContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    return [
-      {
-        name: "Test Type 1",
-        description: "A dummy type for testing",
-        content: "interface TestType { id: number; name: string; }"
-      },
-      {
-        name: "Test Type 2",
-        description: "Another dummy type for testing",
-        content: "type Status = 'active' | 'inactive' | 'pending';"
-      },
-      {
-        name: "Test Header",
-        description: "A dummy header for testing",
-        content: "import { useState, useEffect } from 'react';"
+    const currentFile = await extras.ide.getCurrentFile();
+    if (!currentFile?.contents) {
+      return [];
+    }
+
+    try {
+      const normalizedPath = "/" + currentFile.path.replace(/^file:\/\/\//, "");
+      const fileExtension = normalizedPath.split(".").pop()?.toLowerCase() || "";
+
+      console.log("File exists:", fs.existsSync(normalizedPath));
+      console.log("File contents:", currentFile.contents?.length);
+      console.log("Normalized path:", normalizedPath);
+
+      let currentLanguage: Language;
+
+      if (fileExtension === "js" || fileExtension === "ts" || fileExtension === "jsx" || fileExtension === "tsx") {
+        currentLanguage = Language.TypeScript;
+      } else if (fileExtension === "ml" || fileExtension === "mli") {
+        currentLanguage = Language.OCaml;
+      } else {
+        return [];
       }
-    ];
+
+      // problem with getGitRootPath, it returns empty string
+      const gitRootPath = await extras.ide.getGitRootPath(normalizedPath);
+      const normalizedGitRootPath = gitRootPath ? ("/" + gitRootPath.replace(/^file:\/\/\//, "")) : "you can try to hardcode the git root path here";
+
+      console.log("Git root path:", normalizedGitRootPath);
+
+      const result = await extractContext(
+        currentLanguage,
+        normalizedPath,
+        normalizedGitRootPath
+      );
+
+      const contextItems: ContextItem[] = [];
+
+      console.log("Extractor Result:", {
+        holeTypes: result?.holeType,
+        relevantTypes: result?.relevantTypes,
+        relevantHeaders: result?.relevantHeaders
+      });
+
+      // Add hole types
+      if (result?.holeType) {
+        contextItems.push({
+          name: "Hole Types",
+          description: "Types found in the code holes",
+          content: result.holeType
+        });
+      }
+
+      // Add relevant types
+      if (result?.relevantTypes) {
+        contextItems.push({
+          name: "Relevant Types",
+          description: "Related type definitions",
+          content: Array.from(result.relevantTypes.values()).flat().join("\n")
+        });
+      }
+
+      // Add relevant headers
+      if (result?.relevantHeaders) {
+        contextItems.push({
+          name: "Relevant Headers",
+          description: "Related header information",
+          content: Array.from(result.relevantHeaders.values()).flat().join("\n")
+        });
+      }
+
+      // print context items for testing
+      console.log("Final Context Items:", JSON.stringify(contextItems, null, 2));
+
+      return contextItems;
+    } catch (error) {
+      console.error("Error extracting context:", error);
+      return [];
+    }
   }
 
-  async loadSubmenuItems(_args: LoadSubmenuItemsArgs) {
-    return [];
-  }
 }
 
 export default ExtractorContextProvider;
