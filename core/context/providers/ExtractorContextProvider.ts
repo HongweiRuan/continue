@@ -15,12 +15,12 @@ import type {
 
 export class ExtractorContextProvider extends BaseContextProvider {
 
-  static description: ContextProviderDescription = {
-    title: "extractor",
-    displayTitle: "Extracted Context",
-    description: "Provides context extracted from code using language server",
-    type: "normal",
-  };
+  // static description: ContextProviderDescription = {
+  //   title: "extractor",
+  //   displayTitle: "Extracted Context",
+  //   description: "Provides context extracted from code using language server",
+  //   type: "normal",
+  // };
 
   get description(): ContextProviderDescription {
     return {
@@ -58,16 +58,15 @@ export class ExtractorContextProvider extends BaseContextProvider {
         return [];
       }
 
-      // problem with getGitRootPath, it returns empty string
-      const gitRootPath = await extras.ide.getGitRootPath(normalizedPath);
-      const normalizedGitRootPath = gitRootPath ? ("/" + gitRootPath.replace(/^file:\/\/\//, "")) : "you can try to hardcode the git root path here";
+      const workspaceDirs = await extras.ide.getWorkspaceDirs();
+      const normalizedWorkspacePath = workspaceDirs[0] ? ("/" + workspaceDirs[0].replace(/^file:\/\/\//, "")) : "";
 
-      console.log("Git root path:", normalizedGitRootPath);
+      console.log("Workspace path:", normalizedWorkspacePath);
 
       const result = await extractContext(
         currentLanguage,
         normalizedPath,
-        normalizedGitRootPath
+        normalizedWorkspacePath
       );
 
       const contextItems: ContextItem[] = [];
@@ -114,7 +113,6 @@ export class ExtractorContextProvider extends BaseContextProvider {
       return [];
     }
   }
-
 }
 
 export default ExtractorContextProvider;
