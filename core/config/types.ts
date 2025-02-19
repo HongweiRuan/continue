@@ -1140,10 +1140,16 @@ declare global {
     experimental?: ExperimentalConfig;
     /** Analytics configuration */
     analytics?: AnalyticsConfig;
+    autocomplete: {
+      provider: "default" | "context-extractor";
+    }
   }
   
   // in the actual Continue source code
   export interface ContinueConfig {
+    autocomplete?: {
+      provider?: "default" | "context-extractor";
+    };
     allowAnonymousTelemetry?: boolean;
     models: ILLM[];
     systemMessage?: string;
