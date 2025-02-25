@@ -32,6 +32,7 @@ function renderStringTemplate(
   lang: AutocompleteLanguageInfo,
   filepath: string,
   reponame: string,
+  holeInfo?: string,
 ) {
   const filename = getUriPathBasename(filepath);
   const compiledTemplate = Handlebars.compile(template);
@@ -42,6 +43,7 @@ function renderStringTemplate(
     filename,
     reponame,
     language: lang.name,
+    holeInfo,
   });
 }
 
@@ -93,22 +95,24 @@ export function renderPrompt({
     // Templates can be passed as a Handlebars template string or a function
     typeof template === "string"
       ? renderStringTemplate(
-          template,
-          prefix,
-          suffix,
-          helper.lang,
-          helper.filepath,
-          reponame,
-        )
+        template,
+        prefix,
+        suffix,
+        helper.lang,
+        helper.filepath,
+        reponame,
+        helper.holeInfo,
+      )
       : template(
-          prefix,
-          suffix,
-          helper.filepath,
-          reponame,
-          helper.lang.name,
-          snippets,
-          helper.workspaceUris,
-        );
+        prefix,
+        suffix,
+        helper.filepath,
+        reponame,
+        helper.lang.name,
+        snippets,
+        helper.workspaceUris,
+        helper.holeInfo,
+      );
 
   const stopTokens = getStopTokens(
     completionOptions,

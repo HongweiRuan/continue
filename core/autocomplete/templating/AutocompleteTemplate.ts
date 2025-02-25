@@ -21,16 +21,17 @@ export interface AutocompleteTemplate {
     workspaceUris: string[],
   ) => [string, string];
   template:
-    | string
-    | ((
-        prefix: string,
-        suffix: string,
-        filepath: string,
-        reponame: string,
-        language: string,
-        snippets: AutocompleteSnippet[],
-        workspaceUris: string[],
-      ) => string);
+  | string
+  | ((
+    prefix: string,
+    suffix: string,
+    filepath: string,
+    reponame: string,
+    language: string,
+    snippets: AutocompleteSnippet[],
+    workspaceUris: string[],
+    holeInfo?: string,
+  ) => string);
   completionOptions?: Partial<CompletionOptions>;
 }
 
@@ -116,8 +117,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
       .join("\n\n");
 
     return [
-      `${otherFiles}\n\n+++++ ${
-        relativePaths[relativePaths.length - 1].uri
+      `${otherFiles}\n\n+++++ ${relativePaths[relativePaths.length - 1].uri
       }\n${prefix}`,
       suffix,
     ];
@@ -160,10 +160,10 @@ const starcoder2FimTemplate: AutocompleteTemplate = {
       snippets.length === 0
         ? ""
         : `<file_sep>${snippets
-            .map((snippet) => {
-              return snippet.content;
-            })
-            .join("<file_sep>")}<file_sep>`;
+          .map((snippet) => {
+            return snippet.content;
+          })
+          .join("<file_sep>")}<file_sep>`;
 
     const prompt = `${otherFiles}<fim_prefix>${prefix}<fim_suffix>${suffix}<fim_middle>`;
     return prompt;
@@ -218,9 +218,8 @@ const codegeexFimTemplate: AutocompleteTemplate = {
       [...snippets.map((snippet) => snippet.filepath), filepath],
       workspaceUris,
     );
-    const baseTemplate = `###PATH:${
-      relativePaths[relativePaths.length - 1]
-    }\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
+    const baseTemplate = `###PATH:${relativePaths[relativePaths.length - 1]
+      }\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
     if (snippets.length === 0) {
       return `<|user|>\n${baseTemplate}<|assistant|>\n`;
     }
@@ -252,9 +251,19 @@ Fill in the blank to complete the code block. Your response should include only 
 };
 
 const holeFillerTemplate: AutocompleteTemplate = {
-  template: (prefix: string, suffix: string) => {
-    // From https://github.com/VictorTaelin/AI-scripts
+  template: (
+    prefix: string,
+    suffix: string,
+    _filepath: string,
+    _reponame: string,
+    _language: string,
+    _snippets: AutocompleteSnippet[],
+    _workspaceUris: string[],
+    holeInfo?: string,
+  ) => {
     const SYSTEM_MSG = `You are a HOLE FILLER. You are provided with a file containing holes, formatted as '{{HOLE_NAME}}'. Your TASK is to complete with a string to replace this hole with, inside a <COMPLETION/> XML tag, including context-aware indentation, if needed.  All completions MUST be truthful, accurate, well-written and correct.
+
+${holeInfo ? `\nAvailable type information:\n${holeInfo}\n\nUse this type information to ensure type safety in your completion.` : ""}
 
 ## EXAMPLE QUERY:
 

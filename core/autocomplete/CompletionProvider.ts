@@ -20,6 +20,9 @@ import AutocompleteLruCache from "./util/AutocompleteLruCache.js";
 import { HelperVars } from "./util/HelperVars.js";
 import { AutocompleteInput, AutocompleteOutcome } from "./util/types.js";
 
+
+import { ExtractorContextProvider } from "../context/providers/ExtractorContextProvider.js";
+
 const autocompleteCache = AutocompleteLruCache.get();
 
 // Errors that can be expected on occasion even during normal functioning should not be shown.
@@ -129,6 +132,41 @@ export class CompletionProvider {
     return options;
   }
 
+  private async getHoleInfo(filepath: string): Promise<string | undefined> {
+    try {
+      const extractorProvider = new ExtractorContextProvider(this.ide);
+
+      // use the same ide instance for autocomplete
+      const currentFile = await this.ide.getCurrentFile();
+      if (!currentFile?.contents) {
+        return undefined;
+      }
+
+      // get context items
+      const contextItems = await extractorProvider.getContextItems(currentFile.contents, {
+        ide: this.ide,
+        // these are required fields for the ContextProviderExtras interface
+        config: undefined as any,
+        fullInput: "",
+        embeddingsProvider: undefined as any,
+        reranker: undefined,
+        llm: undefined as any,
+        selectedCode: [],
+        fetch: undefined as any,
+      });
+
+      // only return content related to Hole Types
+      return contextItems
+        .filter(item => item.name === "Hole Types")
+        .map(item => item.content)
+        .join("\n\n");
+
+    } catch (error) {
+      console.error("Error getting hole info:", error);
+      return undefined;
+    }
+  }
+
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
@@ -147,6 +185,7 @@ export class CompletionProvider {
         return undefined;
       }
 
+      // create HelperVars instance
       const helper = await HelperVars.create(
         input,
         options,
@@ -154,11 +193,16 @@ export class CompletionProvider {
         this.ide,
       );
 
+      // get and set hole info
+      const holeInfo = await this.getHoleInfo(input.filepath);
+      console.log("Retrieved hole info:", holeInfo);
+      helper.holeInfo = holeInfo;
+
       if (await shouldPrefilter(helper, this.ide)) {
         return undefined;
       }
 
-      // Create abort signal if not given
+      // create abort signal if not given
       if (!token) {
         const controller = this.loggingService.createAbortController(
           input.completionId,
@@ -176,6 +220,7 @@ export class CompletionProvider {
         this.ide.getWorkspaceDirs(),
       ]);
 
+      console.log("Rendering prompt with hole info:", helper.holeInfo);
       const { prompt, prefix, suffix, completionOptions } = renderPrompt({
         snippetPayload,
         workspaceDirs,
@@ -221,11 +266,11 @@ export class CompletionProvider {
 
         const processedCompletion = helper.options.transform
           ? postprocessCompletion({
-              completion,
-              prefix: helper.prunedPrefix,
-              suffix: helper.prunedSuffix,
-              llm,
-            })
+            completion,
+            prefix: helper.prunedPrefix,
+            suffix: helper.prunedSuffix,
+            llm,
+          })
           : completion;
 
         completion = processedCompletion;

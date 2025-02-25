@@ -17,7 +17,7 @@ export class ExtractorContextProvider extends BaseContextProvider {
 
   static description: ContextProviderDescription = {
     title: "extractor",
-    displayTitle: "Extracted Context",
+    displayTitle: "Extract",
     description: "Provides context extracted from code using language server",
     type: "normal",
   };

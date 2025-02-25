@@ -21,6 +21,7 @@ export class HelperVars {
   lang: AutocompleteLanguageInfo;
   treePath: AstPath | undefined;
   workspaceUris: string[] = [];
+  holeInfo: string | undefined;
 
   private _fileContents: string | undefined;
   private _fileLines: string[] | undefined;
@@ -175,5 +176,9 @@ export class HelperVars {
       );
     }
     return this._prunedSuffix;
+  }
+
+  setHoleInfo(holeInfo: string | undefined) {
+    this.holeInfo = holeInfo;
   }
 }
