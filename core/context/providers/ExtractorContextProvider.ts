@@ -15,21 +15,12 @@ import type {
 
 export class ExtractorContextProvider extends BaseContextProvider {
 
-  // static description: ContextProviderDescription = {
-  //   title: "extractor",
-  //   displayTitle: "Extracted Context",
-  //   description: "Provides context extracted from code using language server",
-  //   type: "normal",
-  // };
-
-  get description(): ContextProviderDescription {
-    return {
-      title: "Context Extractor",
-      displayTitle: "Extracted Context",
-      description: "Provides context extracted from code using language server",
-      type: "normal",
-    };
-  }
+  static description: ContextProviderDescription = {
+    title: "extractor",
+    displayTitle: "Extracted Context",
+    description: "Provides context extracted from code using language server",
+    type: "normal",
+  };
 
   async getContextItems(
     query: string,
