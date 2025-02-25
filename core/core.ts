@@ -6,7 +6,6 @@ import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
-import { ContextExtractorCompletionProvider } from "./autocomplete/ContextExtractorCompletionProvider";
 import { ConfigHandler } from "./config/ConfigHandler";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import {
@@ -66,9 +65,6 @@ export class Core {
 
   private abortedMessageIds: Set<string> = new Set();
 
-  private readonly defaultCompletionProvider!: CompletionProvider;
-  private readonly contextExtractorProvider!: ContextExtractorCompletionProvider;
-
   private async config() {
     return (await this.configHandler.loadConfig()).config;
   }
@@ -93,7 +89,7 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
-    private readonly onWrite: (text: string) => Promise<void> = async () => { },
+    private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
     // Ensure .continue directory is created
     setupInitialDotContinueDirectory();
@@ -194,11 +190,9 @@ export class Core {
       this.configHandler,
       ide,
       getLlm,
-      (e) => { },
+      (e) => {},
       (..._) => Promise.resolve([]),
     );
-
-    this.contextExtractorProvider = new ContextExtractorCompletionProvider(ide);
 
     const on = this.messenger.on.bind(this.messenger);
 
@@ -641,11 +635,11 @@ export class Core {
 
     // Autocomplete
     on("autocomplete/complete", async (msg) => {
-      const provider = await this.getCurrentProvider();
-      const outcome = await provider.provideInlineCompletionItems(
-        msg.data,
-        undefined,
-      );
+      const outcome =
+        await this.completionProvider.provideInlineCompletionItems(
+          msg.data,
+          undefined,
+        );
       return outcome ? [outcome.completion] : [];
     });
     on("autocomplete/accept", async (msg) => {
@@ -994,12 +988,7 @@ export class Core {
     });
   }
 
-  private async getCurrentProvider(): Promise<CompletionProvider | ContextExtractorCompletionProvider> {
-    const { config } = await this.configHandler.loadConfig();
-    return config?.autocomplete?.provider === "context-extractor"
-      ? this.contextExtractorProvider
-      : this.defaultCompletionProvider;
-  }
+  // private
 }
 
 let hasRequestedDocs = false;

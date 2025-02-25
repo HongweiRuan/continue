@@ -15,9 +15,6 @@ import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
-
-import { ContextExtractorCompletionProvider } from "core/autocomplete/ContextExtractorCompletionProvider";
-
 import {
   monitorBatteryChanges,
   setupStatusBar,
@@ -43,7 +40,6 @@ import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { AutocompleteInput } from "core/autocomplete/util/types";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
@@ -210,15 +206,6 @@ export class VsCodeExtension {
         ),
       ),
     );
-    // Register context-extractor completion provider
-    context.subscriptions.push(
-      vscode.languages.registerInlineCompletionItemProvider(
-        [{ pattern: "**" }],
-        new VsCodeContextExtractorProvider(
-          new ContextExtractorCompletionProvider(this.ide)
-        )
-      )
-    );
 
     // Battery
     this.battery = new Battery();
@@ -366,7 +353,8 @@ export class VsCodeExtension {
 
     // Register a content provider for the readonly virtual documents
     const documentContentProvider = new (class
-      implements vscode.TextDocumentContentProvider {
+      implements vscode.TextDocumentContentProvider
+    {
       // emitter and its event
       onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
       onDidChange = this.onDidChangeEmitter.event;
@@ -404,32 +392,5 @@ export class VsCodeExtension {
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.configHandler.registerCustomContextProvider(contextProvider);
-  }
-}
-
-class VsCodeContextExtractorProvider implements vscode.InlineCompletionItemProvider {
-  constructor(private provider: ContextExtractorCompletionProvider) { }
-
-  async provideInlineCompletionItems(
-    document: vscode.TextDocument,
-    position: vscode.Position,
-  ): Promise<vscode.InlineCompletionItem[]> {
-    try {
-      const input: AutocompleteInput = {
-        pos: position,
-        isUntitledFile: document.isUntitled,
-        completionId: uuidv4(),
-        filepath: document.uri.toString(),
-        recentlyVisitedRanges: [],
-        recentlyEditedRanges: []
-      };
-
-      const outcome = await this.provider.provideInlineCompletionItems(input);
-      return outcome ? [new vscode.InlineCompletionItem(outcome.completion)] : [];
-    } catch (e) {
-      console.error(e);
-      void vscode.window.showErrorMessage(`Context extractor error: ${e}`);
-      return [];
-    }
   }
 }
