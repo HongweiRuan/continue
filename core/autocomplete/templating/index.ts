@@ -114,6 +114,9 @@ export function renderPrompt({
         helper.holeInfo,
       );
 
+  // print the full prompt
+  console.log("Final prompt with hole info:", prompt);
+
   const stopTokens = getStopTokens(
     completionOptions,
     helper.lang,

@@ -357,6 +357,41 @@ function hypothenuse(a, b) {
   },
 };
 
+const qwenCoderHoleFillerTemplate: AutocompleteTemplate = {
+  template: (
+    prefix: string,
+    suffix: string,
+    _filepath: string,
+    _reponame: string,
+    _language: string,
+    _snippets: AutocompleteSnippet[],
+    _workspaceUris: string[],
+    holeInfo?: string,
+  ) => {
+    // system message, including type information
+    const systemMsg = `You are a code completion assistant. Complete the code between <|fim_prefix|> and <|fim_suffix|> markers.
+${holeInfo ? `\nAvailable type information:\n${holeInfo}\n\nEnsure your completion follows these type definitions.` : ""}`;
+
+    // build the full prompt
+    const fullPrompt = `${systemMsg}\n\n<|fim_prefix|>${prefix}<|fim_suffix|>${suffix}<|fim_middle|>`;
+
+    return fullPrompt;
+  },
+  completionOptions: {
+    stop: [
+      "<|endoftext|>",
+      "<|fim_prefix|>",
+      "<|fim_middle|>",
+      "<|fim_suffix|>",
+      "<|fim_pad|>",
+      "<|repo_name|>",
+      "<|file_sep|>",
+      "<|im_start|>",
+      "<|im_end|>",
+    ],
+  },
+};
+
 export function getTemplateForModel(model: string): AutocompleteTemplate {
   const lowerCaseModel = model.toLowerCase();
 
@@ -365,7 +400,7 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
   // }
 
   if (lowerCaseModel.includes("qwen") && lowerCaseModel.includes("coder")) {
-    return qwenCoderFimTemplate;
+    return qwenCoderHoleFillerTemplate;
   }
 
   if (
