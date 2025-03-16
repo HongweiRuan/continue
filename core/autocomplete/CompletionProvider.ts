@@ -155,21 +155,12 @@ export class CompletionProvider {
         fetch: undefined as any,
       });
 
-      // get Hole Types and Relevant Types
-      const holeTypes = contextItems
+      // only return content related to Hole Types
+      return contextItems
         .filter(item => item.name === "Hole Types")
-        .map(item => item.content);
+        .map(item => item.content)
+        .join("\n\n");
 
-      const relevantTypes = contextItems
-        .filter(item => item.name === "Relevant Types")
-        .map(item => item.content);
-
-      const relevantHeaders = contextItems
-        .filter(item => item.name === "Relevant Headers")
-        .map(item => item.content);
-
-      // merge two types of information
-      return [...holeTypes, ...relevantTypes, ...relevantHeaders].join("\n\n");
     } catch (error) {
       console.error("Error getting hole info:", error);
       return undefined;
