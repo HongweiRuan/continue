@@ -204,7 +204,7 @@ export class CompletionProvider {
 
       // get and set hole info
       const holeInfo = await this.getHoleInfo(input.filepath);
-      console.log("Retrieved hole info:", holeInfo);
+      // console.log("Retrieved hole info:", holeInfo);
       helper.holeInfo = holeInfo;
 
       if (await shouldPrefilter(helper, this.ide)) {
@@ -229,12 +229,13 @@ export class CompletionProvider {
         this.ide.getWorkspaceDirs(),
       ]);
 
-      console.log("Rendering prompt with hole info:", helper.holeInfo);
       const { prompt, prefix, suffix, completionOptions } = renderPrompt({
         snippetPayload,
         workspaceDirs,
         helper,
       });
+
+      console.log("Prompt with hole info:", prompt);
 
       // Completion
       let completion: string | undefined = "";
@@ -283,6 +284,7 @@ export class CompletionProvider {
           : completion;
 
         completion = processedCompletion;
+        console.log("Processed completion:", completion);
       }
 
       if (!completion) {

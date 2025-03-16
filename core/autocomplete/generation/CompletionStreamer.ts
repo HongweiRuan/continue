@@ -22,6 +22,7 @@ export class CompletionStreamer {
     completionOptions: Partial<CompletionOptions> | undefined,
     helper: HelperVars,
   ) {
+
     // Try to reuse pending requests if what the user typed matches start of completion
     const generator = this.generatorReuseManager.getGenerator(
       prefix,
@@ -29,9 +30,9 @@ export class CompletionStreamer {
         llm.supportsFim()
           ? llm.streamFim(prefix, suffix, abortSignal, completionOptions)
           : llm.streamComplete(prompt, abortSignal, {
-              ...completionOptions,
-              raw: true,
-            }),
+            ...completionOptions,
+            raw: true,
+          }),
       multiline,
     );
 
@@ -52,14 +53,14 @@ export class CompletionStreamer {
     const initialGenerator = generatorWithCancellation();
     const transformedGenerator = helper.options.transform
       ? this.streamTransformPipeline.transform(
-          initialGenerator,
-          prefix,
-          suffix,
-          multiline,
-          completionOptions?.stop || [],
-          fullStop,
-          helper,
-        )
+        initialGenerator,
+        prefix,
+        suffix,
+        multiline,
+        completionOptions?.stop || [],
+        fullStop,
+        helper,
+      )
       : initialGenerator;
 
     for await (const update of transformedGenerator) {
