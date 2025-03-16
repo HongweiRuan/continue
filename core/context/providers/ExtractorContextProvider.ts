@@ -35,6 +35,10 @@ export class ExtractorContextProvider extends BaseContextProvider {
       const normalizedPath = "/" + currentFile.path.replace(/^file:\/\/\//, "");
       const fileExtension = normalizedPath.split(".").pop()?.toLowerCase() || "";
 
+      console.log("File exists:", fs.existsSync(normalizedPath));
+      console.log("File contents:", currentFile.contents?.length);
+      console.log("Normalized path:", normalizedPath);
+
       let currentLanguage: Language;
 
       if (fileExtension === "js" || fileExtension === "ts" || fileExtension === "jsx" || fileExtension === "tsx") {
@@ -48,6 +52,8 @@ export class ExtractorContextProvider extends BaseContextProvider {
       const workspaceDirs = await extras.ide.getWorkspaceDirs();
       const normalizedWorkspacePath = workspaceDirs[0] ? ("/" + workspaceDirs[0].replace(/^file:\/\/\//, "")) : "";
 
+      console.log("Workspace path:", normalizedWorkspacePath);
+
       const result = await extractContext(
         currentLanguage,
         normalizedPath,
@@ -55,6 +61,12 @@ export class ExtractorContextProvider extends BaseContextProvider {
       );
 
       const contextItems: ContextItem[] = [];
+
+      console.log("Extractor Result:", {
+        holeTypes: result?.holeType,
+        relevantTypes: result?.relevantTypes,
+        relevantHeaders: result?.relevantHeaders
+      });
 
       // Add hole types
       if (result?.holeType) {
@@ -82,6 +94,10 @@ export class ExtractorContextProvider extends BaseContextProvider {
           content: Array.from(result.relevantHeaders.values()).flat().join("\n")
         });
       }
+
+      // print context items for testing
+      console.log("Final Context Items:", JSON.stringify(contextItems, null, 2));
+
       return contextItems;
     } catch (error) {
       console.error("Error extracting context:", error);
